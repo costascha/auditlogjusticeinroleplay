@@ -15,10 +15,17 @@ const adminLabel = document.querySelector("#admin-label");
 const accountLabel = document.querySelector("#account-label");
 const ticketListTitle = document.querySelector("#ticket-list-title");
 
+const DEMO_ACCOUNTS = {
+    "admin@demo.local": { password: "DemoAdmin123!", isAdmin: true, name: "Demo Admin" },
+    "user@demo.local": { password: "DemoUser123!", isAdmin: false, name: "Demo User" }
+};
+const DEMO_TICKETS_STORAGE_KEY = "demo-ticket-system-tickets-v1";
+
 let supabase;
 let currentUser;
 let isAdmin = false;
 let passwordRecoveryInProgress = false;
+let demoMode = false;
 
 function showMessage(element, message, isError = false) {
     element.textContent = message;
@@ -30,6 +37,38 @@ function showError(element, message, error) {
     showMessage(element, message, true);
 }
 
+function getDemoTickets() {
+    try {
+        const raw = localStorage.getItem(DEMO_TICKETS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        console.warn("Could not read demo tickets from localStorage.", error);
+        return [];
+    }
+}
+
+function saveDemoTickets(tickets) {
+    localStorage.setItem(DEMO_TICKETS_STORAGE_KEY, JSON.stringify(tickets));
+}
+
+function createDemoSession(email) {
+    const account = DEMO_ACCOUNTS[email];
+    return {
+        user: {
+            id: `demo-${email.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`,
+            email,
+            isAdmin: Boolean(account?.isAdmin),
+            name: account?.name ?? "Demo User"
+        },
+        access_token: "demo-token"
+    };
+}
+
+function generateDemoTicketNumber() {
+    const raw = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    return `1-${raw.replace(/[^0-9]/g, "").slice(-16)}`;
+}
+
 function showLogin() {
     currentUser = undefined;
     isAdmin = false;
@@ -38,7 +77,7 @@ function showLogin() {
     ticketsView.hidden = true;
     authView.hidden = false;
     ticketList.replaceChildren();
-    showMessage(formMessage, "");
+    showMessage(formMessage, demoMode ? "Demo mode active. Use admin@demo.local / DemoAdmin123! or user@demo.local / DemoUser123!" : "");
 }
 
 function showPasswordReset() {
@@ -46,7 +85,7 @@ function showPasswordReset() {
     authView.hidden = true;
     ticketsView.hidden = true;
     passwordResetView.hidden = false;
-    showMessage(resetMessage, "");
+    showMessage(resetMessage, demoMode ? "Demo reset is enabled. Use any password for testing." : "");
 }
 
 function statusLabel(status) {
@@ -82,16 +121,17 @@ function createStatusControl(ticket) {
         select.append(option);
     }
 
-    select.addEventListener("change", async () => {
+    select.addEventListener("change", () => {
         const previousStatus = ticket.status;
         select.disabled = true;
         try {
-            const { error } = await supabase
-                .from("tickets")
-                .update({ status: select.value })
-                .eq("ticket_number", ticket.ticket_number);
-            if (error) throw error;
+            const tickets = getDemoTickets();
+            const target = tickets.find(item => item.ticket_number === ticket.ticket_number);
+            if (!target) throw new Error("Ticket not found.");
 
+            target.status = select.value;
+            target.updated_at = new Date().toISOString();
+            saveDemoTickets(tickets);
             ticket.status = select.value;
             showMessage(listMessage, `Η κατάσταση του ${ticket.ticket_number} ενημερώθηκε.`);
         } catch (error) {
@@ -137,14 +177,39 @@ function renderTicket(ticket) {
     if (isAdmin) {
         const requester = document.createElement("small");
         requester.className = "ticket-requester";
-        requester.textContent = `Αναγνωριστικό χρήστη: ${ticket.user_id}`;
+        requester.textContent = `Χρήστης: ${ticket.user_email}`;
         card.append(requester);
     }
     card.append(subject, description);
     return card;
 }
 
+function loadDemoTickets() {
+    const tickets = getDemoTickets();
+    const visibleTickets = tickets.filter(ticket => {
+        if (isAdmin) return true;
+        return ticket.user_email === currentUser.email;
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    ticketList.replaceChildren();
+    if (visibleTickets.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-tickets";
+        empty.textContent = "Δεν υπάρχουν αιτήματα ακόμη.";
+        ticketList.append(empty);
+    } else {
+        ticketList.append(...visibleTickets.map(renderTicket));
+    }
+    showMessage(listMessage, "");
+}
+
 async function loadTickets() {
+    if (demoMode) {
+        showMessage(listMessage, "Φόρτωση αιτημάτων...");
+        loadDemoTickets();
+        return;
+    }
+
     showMessage(listMessage, "Φόρτωση αιτημάτων...");
     let tickets;
     try {
@@ -182,6 +247,18 @@ async function showSession(session) {
     ticketList.replaceChildren();
     showMessage(listMessage, "Φόρτωση λογαριασμού...");
 
+    if (demoMode) {
+        const demoUser = session.user;
+        currentUser = demoUser;
+        isAdmin = Boolean(demoUser.isAdmin);
+        accountLabel.textContent = demoUser.email ?? "";
+        adminLabel.hidden = !isAdmin;
+        ticketListTitle.textContent = isAdmin ? "Όλα τα αιτήματα" : "Τα αιτήματά σου";
+        showMessage(formMessage, "");
+        loadDemoTickets();
+        return;
+    }
+
     try {
         const { data: profile, error } = await supabase
             .from("profiles")
@@ -208,17 +285,38 @@ passwordToggle.addEventListener("click", () => {
     const showPassword = passwordInput.type === "password";
     passwordInput.type = showPassword ? "text" : "password";
     passwordToggle.setAttribute("aria-pressed", String(showPassword));
+    passwordToggle.textContent = showPassword ? "Απόκρυψη" : "Εμφάνιση";
     passwordToggle.setAttribute("aria-label", showPassword ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού");
 });
 
 loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const enteredEmail = emailInput.value.trim().toLowerCase();
+    const enteredPassword = passwordInput.value;
+
+    if (demoMode) {
+        const account = DEMO_ACCOUNTS[enteredEmail];
+        if (!account || account.password !== enteredPassword) {
+            showError(formMessage, "Λάθος email ή κωδικός στο demo mode.", null);
+            return;
+        }
+
+        submitButton.disabled = true;
+        showMessage(formMessage, "Γίνεται σύνδεση...");
+        const session = createDemoSession(enteredEmail);
+        session.user.isAdmin = account.isAdmin;
+        await showSession(session);
+        submitButton.disabled = false;
+        return;
+    }
+
     if (!supabase) {
         showMessage(formMessage, "Η υπηρεσία σύνδεσης δεν έχει ρυθμιστεί ακόμη.", true);
         return;
     }
 
-    const submitButton = loginForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     showMessage(formMessage, "Γίνεται σύνδεση...");
     try {
@@ -236,8 +334,18 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("#recovery-button").addEventListener("click", async () => {
-    if (!supabase) {
+    if (!supabase && !demoMode) {
         showMessage(formMessage, "Η υπηρεσία επαναφοράς δεν έχει ρυθμιστεί ακόμη.", true);
+        return;
+    }
+    if (demoMode) {
+        const email = emailInput.value.trim().toLowerCase();
+        if (!email) {
+            showMessage(formMessage, "Συμπλήρωσε πρώτα το email σου.", true);
+            emailInput.focus();
+            return;
+        }
+        showMessage(formMessage, `Demo mode: ο λογαριασμός ${email} έχει προσωρινή επαναφορά κωδικού. Για δοκιμή χρησιμοποιήστε το demo password που αντιστοιχεί στο account.`);
         return;
     }
     if (!emailInput.reportValidity()) {
@@ -265,6 +373,21 @@ document.querySelector("#password-reset-form").addEventListener("submit", async 
         return;
     }
 
+    if (demoMode) {
+        const userEmail = currentUser ? currentUser.email : emailInput.value.trim().toLowerCase();
+        if (!userEmail || !DEMO_ACCOUNTS[userEmail]) {
+            showMessage(resetMessage, "Δεν βρέθηκε demo account για αυτό το email.", true);
+            return;
+        }
+
+        DEMO_ACCOUNTS[userEmail].password = newPassword;
+        showMessage(resetMessage, "Ο demo κωδικός ενημερώθηκε επιτυχώς.");
+        setTimeout(() => {
+            showLogin();
+        }, 600);
+        return;
+    }
+
     const submitButton = event.currentTarget.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     showMessage(resetMessage, "Ενημέρωση κωδικού...");
@@ -286,7 +409,7 @@ document.querySelector("#password-reset-form").addEventListener("submit", async 
 
 ticketForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!supabase || !currentUser) {
+    if (!currentUser) {
         showMessage(createMessage, "Συνδέσου ξανά για να υποβάλεις αίτημα.", true);
         return;
     }
@@ -301,6 +424,29 @@ ticketForm.addEventListener("submit", async (event) => {
 
     submitButton.disabled = true;
     showMessage(createMessage, "Υποβολή αιτήματος...");
+
+    if (demoMode) {
+        const ticket = {
+            ticket_number: generateDemoTicketNumber(),
+            user_email: currentUser.email,
+            user_id: currentUser.id,
+            subject,
+            description,
+            status: "open",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        const list = getDemoTickets();
+        list.unshift(ticket);
+        saveDemoTickets(list);
+        ticketForm.reset();
+        showMessage(createMessage, `Το αίτημα καταχωρήθηκε με αριθμό No= ${ticket.ticket_number}.`);
+        loadDemoTickets();
+        submitButton.disabled = false;
+        return;
+    }
+
     try {
         const { data: ticket, error } = await supabase
             .from("tickets")
@@ -320,6 +466,12 @@ ticketForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("#sign-out-button").addEventListener("click", async () => {
+    if (demoMode) {
+        currentUser = undefined;
+        isAdmin = false;
+        showLogin();
+        return;
+    }
     if (!supabase) return;
     try {
         const { error } = await supabase.auth.signOut();
@@ -332,36 +484,32 @@ document.querySelector("#sign-out-button").addEventListener("click", async () =>
 
 async function initialize() {
     try {
-        const [supabaseModule, config] = await Promise.all([
-            import("https://esm.sh/@supabase/supabase-js@2"),
-            import("./config.js")
-        ]);
+        const config = await import("./config.js");
         if (
-            !config.SUPABASE_URL ||
-            !config.SUPABASE_ANON_KEY ||
-            config.SUPABASE_URL.includes("YOUR-PROJECT") ||
-            config.SUPABASE_ANON_KEY.includes("YOUR_SUPABASE")
+            config.SUPABASE_URL &&
+            config.SUPABASE_ANON_KEY &&
+            !config.SUPABASE_URL.includes("YOUR-PROJECT") &&
+            !config.SUPABASE_ANON_KEY.includes("YOUR_SUPABASE")
         ) {
-            throw new Error("Supabase URL or anon key is not configured.");
+            const supabaseModule = await import("https://esm.sh/@supabase/supabase-js@2");
+            supabase = supabaseModule.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+            supabase.auth.onAuthStateChange((event) => {
+                if (event === "PASSWORD_RECOVERY") showPasswordReset();
+                if (event === "SIGNED_OUT") showLogin();
+            });
+
+            const { data, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            if (passwordRecoveryInProgress) return;
+            await showSession(data.session);
+            return;
         }
-
-        supabase = supabaseModule.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === "PASSWORD_RECOVERY") showPasswordReset();
-            if (event === "SIGNED_OUT") showLogin();
-        });
-
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (passwordRecoveryInProgress) return;
-        await showSession(data.session);
     } catch (error) {
-        showError(
-            formMessage,
-            "Δεν ήταν δυνατή η σύνδεση με το Supabase. Έλεγξε το config.js, το SQL setup και τη σύνδεση δικτύου.",
-            error
-        );
+        console.info("Supabase configuration not found, enabling demo mode.", error);
     }
+
+    demoMode = true;
+    showLogin();
 }
 
 initialize();
