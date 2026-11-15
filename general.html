@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#172033">
+    <meta name="description" content="Γενικό σύστημα σύνδεσης και διαχείρισης αιτημάτων.">
+    <title>Σύστημα αιτημάτων</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #172033;
+            background: #f1f4f8;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            --muted: #687386;
+            --accent: #315b91;
+        }
+        * { box-sizing: border-box; }
+        body { min-width: 320px; min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; }
+        button, input, textarea { font: inherit; }
+        [hidden] { display: none !important; }
+        .layout { width: min(100%, 980px); min-height: 600px; display: grid; grid-template-columns: .85fr 1.15fr; overflow: hidden; border: 1px solid #e1e6ee; border-radius: 20px; background: #fff; box-shadow: 0 24px 70px rgb(26 39 61 / 12%); }
+        .intro { display: flex; flex-direction: column; justify-content: space-between; padding: 42px; color: #fff; background: linear-gradient(145deg, #263d5e, #172033 75%); }
+        .brand { color: #fff; font-size: 15px; font-weight: 750; letter-spacing: .08em; text-decoration: none; }
+        .brand small { display: block; margin-top: 5px; color: #bdcbe0; font-size: 10px; font-weight: 500; letter-spacing: .16em; }
+        .intro-copy { margin: 60px 0; }
+        .eyebrow, .form-kicker { color: #8eacd2; font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+        h1 { margin: 14px 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.12; }
+        .intro-description { max-width: 330px; color: #d0d9e7; font-size: 14px; line-height: 1.7; }
+        .intro-footer { color: #b7c3d4; font-size: 11px; }
+        .form-panel { display: flex; align-items: center; justify-content: center; padding: 48px; }
+        .form-content, .dashboard { width: min(100%, 520px); }
+        .form-content:not(.dashboard) { max-width: 390px; }
+        .form-kicker { margin: 0 0 10px; color: var(--accent); }
+        h2 { margin: 0; font-size: 30px; letter-spacing: -.03em; }
+        .form-lead { margin: 10px 0 26px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .field { margin: 0 0 16px; }
+        .field-label { display: block; margin-bottom: 7px; color: #344055; font-size: 12px; font-weight: 650; }
+        .text-input { width: 100%; min-height: 46px; padding: 11px 13px; border: 1px solid #dce2eb; border-radius: 8px; outline: none; color: #172033; background: #fff; font-size: 13px; }
+        textarea.text-input { min-height: 100px; resize: vertical; line-height: 1.5; }
+        .text-input:focus { border-color: #6f91bc; box-shadow: 0 0 0 3px rgb(49 91 145 / 12%); }
+        .form-options { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; }
+        .remember, .support-note { color: var(--muted); font-size: 11px; }
+        .recovery-button { padding: 4px 0; border: 0; color: var(--accent); background: transparent; font-size: 12px; cursor: pointer; }
+        .submit-button { width: 100%; min-height: 46px; padding: 10px 16px; border: 0; border-radius: 8px; color: #fff; background: #243b5b; font-size: 13px; font-weight: 650; cursor: pointer; }
+        .submit-button:hover { background: #315b91; }
+        button:disabled { opacity: .6; cursor: wait; }
+        .status-message, .ticket-message { min-height: 18px; margin: 10px 0 0; color: #58667a; font-size: 12px; line-height: 1.5; }
+        .status-message[data-error="true"], .ticket-message[data-error="true"] { color: #a33e36; }
+        .form-divider { height: 1px; margin: 22px 0 16px; background: #e9edf2; }
+        .support-note { line-height: 1.6; text-align: center; }
+        .dashboard-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+        .dashboard-header h2 { font-size: 26px; }
+        .dashboard-header p:last-child { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+        .sign-out-button { flex: 0 0 auto; padding: 8px 11px; border: 1px solid #dce2eb; border-radius: 7px; color: #445168; background: #fff; font-size: 12px; cursor: pointer; }
+        .admin-label { display: inline-block; margin: 0 0 12px; padding: 5px 8px; border-radius: 999px; color: #76551e; background: #f7eedc; font-size: 10px; font-weight: 700; }
+        .ticket-form { padding: 16px; border: 1px solid #e4e8ef; border-radius: 10px; background: #fafbfd; }
+        .ticket-form h3, .ticket-list-heading { margin: 0 0 12px; font-size: 14px; }
+        .ticket-form .field { margin-bottom: 12px; }
+        .ticket-list-section { margin-top: 22px; }
+        .ticket-list { display: grid; gap: 9px; max-height: 240px; overflow-y: auto; }
+        .ticket-card { padding: 13px; border: 1px solid #e4e8ef; border-radius: 9px; background: #fff; }
+        .ticket-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .ticket-number { color: var(--accent); font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; }
+        .ticket-date, .ticket-requester { display: block; margin-top: 5px; color: #8792a3; font-size: 10px; }
+        .ticket-subject { margin: 10px 0 4px; font-size: 13px; overflow-wrap: anywhere; }
+        .ticket-description { margin: 0; color: #58667a; font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .ticket-status { max-width: 145px; padding: 6px 8px; border: 1px solid #dce2eb; border-radius: 7px; color: #445168; background: #fff; font-size: 10px; }
+        .empty-tickets { padding: 16px; border: 1px dashed #dce2eb; border-radius: 8px; color: var(--muted); font-size: 12px; text-align: center; }
+        @media (max-width: 760px) {
+            body { display: block; padding: 12px; }
+            .layout { min-height: 0; grid-template-columns: 1fr; }
+            .intro { padding: 25px 28px; }
+            .intro-copy { margin: 30px 0 12px; }
+            .intro h1 { font-size: 32px; }
+            .intro-description, .intro-footer { display: none; }
+            .form-panel { padding: 30px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="layout">
+        <section class="intro" aria-labelledby="welcome-title">
+            <a class="brand" href="./general.html">ΠΛΑΤΦΟΡΜΑ<small>ΣΥΣΤΗΜΑ ΑΙΤΗΜΑΤΩΝ</small></a>
+            <div class="intro-copy">
+                <p class="eyebrow">Καλώς ήρθες</p>
+                <h1 id="welcome-title">Ένας κοινός χώρος για αιτήματα.</h1>
+                <p class="intro-description">Γενική δοκιμαστική σελίδα για ομάδες και οργανισμούς. Προσάρμοσε την επωνυμία και τα κείμενα στις ανάγκες σου.</p>
+            </div>
+            <footer class="intro-footer">Γενικό πρότυπο — μπορεί να προσαρμοστεί για διαφορετικές ομάδες.</footer>
+        </section>
+
+        <section class="form-panel" aria-label="Σύνδεση και αιτήματα">
+            <div class="form-content" id="auth-view">
+                <p class="form-kicker">Ασφαλής πρόσβαση</p>
+                <h2 id="login-title">Σύνδεση</h2>
+                <p class="form-lead">Συμπλήρωσε τα στοιχεία του λογαριασμού σου για να συνεχίσεις.</p>
+                <form id="login-form">
+                    <div class="field">
+                        <label class="field-label" for="email">Email</label>
+                        <input class="text-input" id="email" name="email" type="email" placeholder="name@example.com" autocomplete="email" autocapitalize="none" spellcheck="false" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="password">Κωδικός πρόσβασης</label>
+                        <div class="input-wrap">
+                            <input class="text-input" id="password" name="password" type="password" placeholder="Κωδικός πρόσβασης" autocomplete="current-password" required>
+                            <button class="recovery-button" id="password-toggle" type="button" aria-label="Εμφάνιση ή απόκρυψη κωδικού" aria-pressed="false">Εμφάνιση</button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <span class="remember">Η συνεδρία διατηρείται</span>
+                        <button class="recovery-button" id="recovery-button" type="button">Ξέχασες τον κωδικό;</button>
+                    </div>
+                    <button class="submit-button" type="submit">Σύνδεση</button>
+                    <p class="status-message" id="form-message" role="status" aria-live="polite"></p>
+                </form>
+                <div class="form-divider" aria-hidden="true"></div>
+                <p class="support-note">Χρειάζεσαι βοήθεια; Επικοινώνησε με τον διαχειριστή του συστήματος.</p>
+            </div>
+
+            <section class="form-content" id="password-reset-view" aria-labelledby="reset-title" hidden>
+                <p class="form-kicker">Ανάκτηση λογαριασμού</p>
+                <h2 id="reset-title">Νέος κωδικός</h2>
+                <p class="form-lead">Επίλεξε νέο κωδικό πρόσβασης τουλάχιστον 10 χαρακτήρων.</p>
+                <form id="password-reset-form">
+                    <div class="field">
+                        <label class="field-label" for="new-password">Νέος κωδικός</label>
+                        <input class="text-input" id="new-password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="confirm-password">Επιβεβαίωση κωδικού</label>
+                        <input class="text-input" id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" minlength="10" required>
+                    </div>
+                    <button class="submit-button" type="submit">Αποθήκευση κωδικού</button>
+                    <p class="status-message" id="reset-message" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <section class="dashboard" id="tickets-view" aria-labelledby="dashboard-title" hidden>
+                <div class="dashboard-header">
+                    <div>
+                        <p class="form-kicker">Κέντρο αιτημάτων</p>
+                        <h2 id="dashboard-title">Αιτήματα</h2>
+                        <p id="account-label"></p>
+                    </div>
+                    <button class="sign-out-button" id="sign-out-button" type="button">Αποσύνδεση</button>
+                </div>
+                <p class="admin-label" id="admin-label" hidden>ΔΙΑΧΕΙΡΙΣΗ ADMIN</p>
+                <form class="ticket-form" id="ticket-form">
+                    <h3>Νέο αίτημα</h3>
+                    <div class="field">
+                        <label class="field-label" for="ticket-subject">Θέμα</label>
+                        <input class="text-input" id="ticket-subject" name="subject" type="text" maxlength="120" placeholder="Σύντομη περιγραφή" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="ticket-description">Περιγραφή</label>
+                        <textarea class="text-input" id="ticket-description" name="description" maxlength="5000" placeholder="Περιέγραψε το αίτημά σου..." required></textarea>
+                    </div>
+                    <button class="submit-button" type="submit">Υποβολή αιτήματος</button>
+                    <p class="ticket-message" id="create-message" role="status" aria-live="polite"></p>
+                </form>
+                <section class="ticket-list-section" aria-labelledby="ticket-list-title">
+                    <h3 class="ticket-list-heading" id="ticket-list-title">Τα αιτήματά σου</h3>
+                    <div class="ticket-list" id="ticket-list" aria-live="polite"></div>
+                    <p class="ticket-message" id="list-message" role="status" aria-live="polite"></p>
+                </section>
+            </section>
+        </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
