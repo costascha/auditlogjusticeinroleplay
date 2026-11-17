@@ -54,7 +54,7 @@
    where id = (
        select id
        from auth.users
-       where email = 'YOUR_EMAIL'
+       where email = 'DIKO_SOU_EMAIL'
    );
    ```
 
