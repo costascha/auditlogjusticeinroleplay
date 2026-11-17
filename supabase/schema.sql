@@ -6,7 +6,15 @@ create sequence if not exists public.ticket_number_seq
     increment by 1
     no cycle;
 
-create table if not exists public.profiles (
+do $$
+begin
+    if to_regclass('public.users') is null and to_regclass('public.profiles') is not null then
+        alter table public.profiles rename to users;
+    end if;
+end;
+$$;
+
+create table if not exists public.users (
     id uuid primary key references auth.users (id) on delete cascade,
     is_admin boolean not null default false,
     created_at timestamptz not null default now()
@@ -27,7 +35,7 @@ create table if not exists public.tickets (
 create index if not exists tickets_user_created_idx
     on public.tickets (user_id, created_at desc);
 
-alter table public.profiles enable row level security;
+alter table public.users enable row level security;
 alter table public.tickets enable row level security;
 grant usage on schema public to authenticated;
 
@@ -40,7 +48,7 @@ set search_path = ''
 as $$
     select exists (
         select 1
-        from public.profiles
+        from public.users
         where id = (select auth.uid())
           and is_admin
     );
@@ -56,7 +64,9 @@ security definer
 set search_path = ''
 as $$
 begin
-    insert into public.profiles (id) values (new.id);
+    insert into public.users (id)
+    values (new.id)
+    on conflict (id) do nothing;
     return new;
 end;
 $$;
@@ -67,7 +77,7 @@ create trigger create_profile_after_signup
     after insert on auth.users
     for each row execute function public.create_profile_for_new_user();
 
-insert into public.profiles (id)
+insert into public.users (id)
 select id from auth.users
 on conflict (id) do nothing;
 
@@ -130,11 +140,12 @@ create policy "Admins update tickets"
     using ((select public.is_admin()))
     with check ((select public.is_admin()));
 
-drop policy if exists "Users read their own profile" on public.profiles;
-create policy "Users read their own profile"
-    on public.profiles for select to authenticated
+drop policy if exists "Users read their own profile" on public.users;
+drop policy if exists "Users read their own user record" on public.users;
+create policy "Users read their own user record"
+    on public.users for select to authenticated
     using ((select auth.uid()) = id);
 
-grant select on public.profiles to authenticated;
+grant select on public.users to authenticated;
 grant select, insert on public.tickets to authenticated;
 grant update (status) on public.tickets to authenticated;

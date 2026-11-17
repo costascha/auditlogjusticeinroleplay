@@ -1,4 +1,5 @@
 const authView = document.querySelector("#auth-view");
+const loadingScreen = document.querySelector("#app-loading");
 const passwordResetView = document.querySelector("#password-reset-view");
 const ticketsView = document.querySelector("#tickets-view");
 const loginForm = document.querySelector("#login-form");
@@ -6,6 +7,12 @@ const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
 const passwordToggle = document.querySelector("#password-toggle");
 const formMessage = document.querySelector("#form-message");
+const loginTitle = document.querySelector("#login-title");
+const authLead = document.querySelector("#auth-lead");
+const authOptions = document.querySelector(".form-options");
+const authModeToggle = document.querySelector("#auth-mode-toggle");
+const authSwitchCopy = document.querySelector("#auth-switch-copy");
+const submitLabel = document.querySelector("#submit-label");
 const resetMessage = document.querySelector("#reset-message");
 const createMessage = document.querySelector("#create-message");
 const listMessage = document.querySelector("#list-message");
@@ -18,6 +25,7 @@ const ticketListTitle = document.querySelector("#ticket-list-title");
 let supabase;
 let currentUser;
 let isAdmin = false;
+let isSignUpMode = false;
 let passwordRecoveryInProgress = false;
 
 function showMessage(element, message, isError = false) {
@@ -34,10 +42,26 @@ function showLogin() {
     currentUser = undefined;
     isAdmin = false;
     passwordRecoveryInProgress = false;
+    setSignUpMode(false);
     passwordResetView.hidden = true;
     ticketsView.hidden = true;
     authView.hidden = false;
     ticketList.replaceChildren();
+    showMessage(formMessage, "");
+}
+
+function setSignUpMode(enabled) {
+    isSignUpMode = enabled;
+    loginTitle.textContent = enabled ? "Δημιουργία λογαριασμού" : "Σύνδεση";
+    authLead.textContent = enabled
+        ? "Δημιούργησε λογαριασμό με το email σου."
+        : "Συμπλήρωσε τα στοιχεία σου για να συνεχίσεις.";
+    authOptions.hidden = enabled;
+    passwordInput.minLength = enabled ? 10 : 0;
+    passwordInput.autocomplete = enabled ? "new-password" : "current-password";
+    submitLabel.textContent = enabled ? "Δημιουργία λογαριασμού" : "Σύνδεση";
+    authSwitchCopy.textContent = enabled ? "Έχεις ήδη λογαριασμό;" : "Δεν έχεις λογαριασμό;";
+    authModeToggle.textContent = enabled ? "Σύνδεση" : "Δημιούργησε λογαριασμό";
     showMessage(formMessage, "");
 }
 
@@ -184,7 +208,7 @@ async function showSession(session) {
 
     try {
         const { data: profile, error } = await supabase
-            .from("profiles")
+            .from("users")
             .select("is_admin")
             .eq("id", session.user.id)
             .single();
@@ -211,6 +235,10 @@ passwordToggle.addEventListener("click", () => {
     passwordToggle.setAttribute("aria-label", showPassword ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού");
 });
 
+authModeToggle.addEventListener("click", () => {
+    setSignUpMode(!isSignUpMode);
+});
+
 loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!supabase) {
@@ -220,16 +248,34 @@ loginForm.addEventListener("submit", async (event) => {
 
     const submitButton = loginForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
-    showMessage(formMessage, "Γίνεται σύνδεση...");
+    showMessage(formMessage, isSignUpMode ? "Δημιουργία λογαριασμού..." : "Γίνεται σύνδεση...");
     try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const credentials = {
             email: emailInput.value.trim(),
             password: passwordInput.value
-        });
+        };
+        const { data, error } = isSignUpMode
+            ? await supabase.auth.signUp({
+                ...credentials,
+                options: {
+                    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+                }
+            })
+            : await supabase.auth.signInWithPassword(credentials);
         if (error) throw error;
-        await showSession(data.session);
+        if (isSignUpMode && !data.session) {
+            showMessage(formMessage, "Αν είναι δυνατό να δημιουργηθεί λογαριασμός με αυτά τα στοιχεία, θα λάβεις email με τα επόμενα βήματα.");
+        } else {
+            await showSession(data.session);
+        }
     } catch (error) {
-        showError(formMessage, "Η σύνδεση απέτυχε. Έλεγξε το email και τον κωδικό σου.", error);
+        showError(
+            formMessage,
+            isSignUpMode
+                ? "Δεν ήταν δυνατή η δημιουργία λογαριασμού. Έλεγξε το email και τον κωδικό σου."
+                : "Η σύνδεση απέτυχε. Έλεγξε το email και τον κωδικό σου.",
+            error
+        );
     } finally {
         submitButton.disabled = false;
     }
@@ -247,7 +293,7 @@ document.querySelector("#recovery-button").addEventListener("click", async () =>
 
     try {
         const { error } = await supabase.auth.resetPasswordForEmail(emailInput.value.trim(), {
-            redirectTo: window.location.origin
+            redirectTo: `${window.location.origin}${window.location.pathname}`
         });
         if (error) throw error;
         showMessage(formMessage, "Αν υπάρχει λογαριασμός με αυτό το email, θα σταλεί σύνδεσμος επαναφοράς.");
@@ -304,7 +350,7 @@ ticketForm.addEventListener("submit", async (event) => {
     try {
         const { data: ticket, error } = await supabase
             .from("tickets")
-            .insert({ subject, description })
+            .insert({ user_id: currentUser.id, subject, description })
             .select("ticket_number")
             .single();
         if (error) throw error;
@@ -348,6 +394,15 @@ async function initialize() {
         supabase = supabaseModule.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
         supabase.auth.onAuthStateChange((event) => {
             if (event === "PASSWORD_RECOVERY") showPasswordReset();
+            if (event === "SIGNED_IN") {
+                supabase.auth.getSession().then(({ data, error: sessionError }) => {
+                    if (sessionError) {
+                        showError(formMessage, "Δεν ήταν δυνατή η επαναφορά της συνεδρίας.", sessionError);
+                        return;
+                    }
+                    showSession(data.session);
+                });
+            }
             if (event === "SIGNED_OUT") showLogin();
         });
 
@@ -361,6 +416,8 @@ async function initialize() {
             "Δεν ήταν δυνατή η σύνδεση με το Supabase. Έλεγξε το config.js, το SQL setup και τη σύνδεση δικτύου.",
             error
         );
+    } finally {
+        loadingScreen.hidden = true;
     }
 }
 
