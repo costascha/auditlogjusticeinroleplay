@@ -27,7 +27,7 @@
 
 ## Δημοσίευση στο GitHub Pages
 
-Η ροή εργασίας `.github/workflows/deploy-pages.yml` δημοσιεύει αυτόματα το site μετά από push στο `main`. Ενεργοποίησε μία φορά το **Settings → Pages → Build and deployment → Source: GitHub Actions**. Το αποθετήριο είναι ιδιωτικό· η διαθεσιμότητα του Pages για ιδιωτικά αποθετήρια εξαρτάται από το πρόγραμμα του GitHub. Δεν αλλάζει η ορατότητα του αποθετηρίου.
+Η ροή εργασίας `.github/workflows/deploy-pages.yml` δημοσιεύει αυτόματα το site μετά από push στο `main`. Στο **Settings → Pages → Build and deployment**, το **Source** πρέπει να είναι **GitHub Actions**. Το repository είναι δημόσιο, οπότε ο πηγαίος κώδικας και το ιστορικό του είναι ορατά στο διαδίκτυο. Για διατήρηση ιδιωτικού repository απαιτείται πλάνο που υποστηρίζει ιδιωτικό GitHub Pages ή διαφορετική φιλοξενία.
 Για να λειτουργεί η επαναφορά κωδικού, πρόσθεσε το URL της σελίδας στις επιτρεπόμενες διευθύνσεις redirect στο Supabase.
 
 ## Ρύθμιση Supabase και Tickets
