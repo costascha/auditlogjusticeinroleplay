@@ -252,41 +252,6 @@
         .support-note { margin: 0; color: #929bad; font-size: 11px; line-height: 1.7; text-align: center; }
         .support-note strong { color: #626d80; font-weight: 600; }
         [hidden] { display: none !important; }
-        .dashboard { width: min(100%, 560px); }
-        .dashboard-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-        .dashboard-header h2 { font-size: 28px; }
-        .dashboard-header p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
-        .sign-out-button { flex: 0 0 auto; padding: 9px 12px; border: 1px solid #e6e9ef; border-radius: 8px; color: #626d80; background: #fff; font-size: 12px; cursor: pointer; }
-        .sign-out-button:hover { border-color: #cbd1dc; color: #172033; }
-        .ticket-form { padding: 18px; border: 1px solid #e6e9ef; border-radius: 12px; background: #fafbfc; }
-        .ticket-form h3, .ticket-list-heading { margin: 0 0 14px; color: #172033; font-size: 14px; font-weight: 650; }
-        .ticket-form .field { margin-bottom: 14px; }
-        .ticket-form .field:last-of-type { margin-bottom: 16px; }
-        .ticket-form textarea { min-height: 100px; padding: 13px 14px; resize: vertical; line-height: 1.5; }
-        .ticket-form .text-input { padding-right: 14px; padding-left: 14px; }
-        .ticket-form .submit-button { min-height: 44px; }
-        .admin-label { display: inline-flex; margin: 0 0 16px; padding: 6px 9px; border-radius: 999px; color: #76551e; background: #f7eedc; font-size: 10px; font-weight: 700; letter-spacing: .05em; }
-        .ticket-list-section { margin-top: 26px; }
-        .ticket-list-heading { display: flex; align-items: center; justify-content: space-between; }
-        .ticket-list { display: grid; gap: 10px; max-height: 290px; overflow-y: auto; }
-        .notification-section { margin: 0 0 18px; padding: 14px; border: 1px solid #e6dcc4; border-radius: 10px; background: #fdfaf3; }
-        .notification-list { display: grid; gap: 8px; max-height: 180px; overflow-y: auto; }
-        .notification-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border: 1px solid #ede4ce; border-radius: 8px; background: #fff; }
-        .notification-copy { min-width: 0; }
-        .notification-copy strong { display: block; color: #253148; font-size: 12px; }
-        .notification-copy small { display: block; margin-top: 4px; color: #929bad; font-size: 10px; }
-        .notification-button { flex: 0 0 auto; padding: 7px 9px; border: 1px solid #dce2eb; border-radius: 7px; color: #445168; background: #fff; font-size: 10px; cursor: pointer; }
-        .ticket-card { padding: 14px; border: 1px solid #e8ebf0; border-radius: 10px; background: #fff; }
-        .ticket-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .ticket-number { color: #8c6835; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; }
-        .ticket-date, .ticket-requester { display: block; margin-top: 5px; color: #929bad; font-size: 10px; }
-        .ticket-subject { margin: 12px 0 5px; color: #253148; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
-        .ticket-description { margin: 0; color: #697387; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
-        .ticket-status { max-width: 145px; padding: 6px 8px; border: 1px solid #e6e9ef; border-radius: 7px; color: #596477; background: #fff; font-size: 10px; }
-        .ticket-message { min-height: 19px; margin: 10px 0 0; color: #697387; font-size: 11px; line-height: 1.5; }
-        .ticket-message[data-error="true"] { color: #a33e36; }
-        .empty-tickets { padding: 18px 12px; border: 1px dashed #dfe3ea; border-radius: 9px; color: #929bad; font-size: 12px; text-align: center; }
-
         @media (max-width: 820px) {
             body { padding: 20px; }
             .layout { width: min(700px, 100%); min-height: 0; grid-template-columns: 1fr; border-radius: 20px; }
@@ -295,7 +260,6 @@
             .intro h1 { max-width: 390px; font-size: 36px; }
             .intro-description, .principles, .intro-footer { display: none; }
             .form-panel { padding: 38px 32px 34px; }
-            .dashboard { width: min(100%, 560px); }
         }
 
         @media (max-width: 420px) {

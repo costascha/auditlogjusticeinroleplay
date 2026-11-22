@@ -40,7 +40,7 @@
         </section>
 
         <section class="form-panel" aria-labelledby="login-title">
-            <div class="form-content" id="auth-view">
+            <div class="form-content" id="login-view">
                 <p class="form-kicker">Ασφαλής πρόσβαση</p>
                 <h2 id="login-title">Σύνδεση</h2>
                 <p class="form-lead" id="auth-lead">Συμπλήρωσε τα στοιχεία σου για να συνεχίσεις.</p>
@@ -76,7 +76,7 @@
                         <span class="remember">Η συνεδρία διατηρείται</span>
                         <button class="recovery-button" id="recovery-button" type="button">Ξέχασες τον κωδικό;</button>
                     </div>
-                    <button class="submit-button" type="submit">
+                    <button class="submit-button" id="submit-button" type="submit">
                         <span id="submit-label">Σύνδεση</span>
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
@@ -105,40 +105,6 @@
                     <button class="submit-button" type="submit">Αποθήκευση κωδικού</button>
                     <p class="status-message" id="reset-message" role="status" aria-live="polite"></p>
                 </form>
-            </section>
-            <section class="dashboard" id="tickets-view" aria-labelledby="dashboard-title" hidden>
-                <div class="dashboard-header">
-                    <div>
-                        <p class="form-kicker">Κέντρο αιτημάτων</p>
-                        <h2 id="dashboard-title">Τα tickets</h2>
-                        <p id="account-label"></p>
-                    </div>
-                    <button class="sign-out-button" id="sign-out-button" type="button">Αποσύνδεση</button>
-                </div>
-                <p class="admin-label" id="admin-label" hidden>ΔΙΑΧΕΙΡΙΣΗ ADMIN</p>
-                <section class="notification-section" id="notification-section" aria-labelledby="notification-title" hidden>
-                    <h3 class="ticket-list-heading" id="notification-title">Εκκρεμείς ειδοποιήσεις εγγραφών</h3>
-                    <div class="notification-list" id="notification-list" aria-live="polite"></div>
-                    <p class="ticket-message" id="notification-message" role="status"></p>
-                </section>
-                <form class="ticket-form" id="ticket-form">
-                    <h3>Νέο αίτημα</h3>
-                    <div class="field">
-                        <label class="field-label" for="ticket-subject">Θέμα</label>
-                        <input class="text-input" id="ticket-subject" name="subject" type="text" maxlength="120" placeholder="Σύντομη περιγραφή του αιτήματος" required>
-                    </div>
-                    <div class="field">
-                        <label class="field-label" for="ticket-description">Περιγραφή</label>
-                        <textarea class="text-input" id="ticket-description" name="description" maxlength="5000" placeholder="Περιέγραψε το αίτημά σου με λεπτομέρειες..." required></textarea>
-                    </div>
-                    <button class="submit-button" type="submit">Υποβολή ticket</button>
-                    <p class="ticket-message" id="create-message" role="status" aria-live="polite"></p>
-                </form>
-                <section class="ticket-list-section" aria-labelledby="ticket-list-title">
-                    <h3 class="ticket-list-heading" id="ticket-list-title">Τα αιτήματά σου</h3>
-                    <div class="ticket-list" id="ticket-list" aria-live="polite"></div>
-                    <p class="ticket-message" id="list-message" role="status" aria-live="polite"></p>
-                </section>
             </section>
         </section>
     </main>

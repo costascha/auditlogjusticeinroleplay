@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Προσωπικός χώρος αιτημάτων του AuditLog Justice Roleplay.">
+    <title>Dashboard | AuditLog</title>
+    <link rel="icon" href="./assets/loading.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+    <div class="dashboard-loading" id="dashboard-loading" role="status" aria-live="polite">
+        <span class="loading-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 3.5 19 6v5.3c0 4.2-2.8 7.4-7 9.2-4.2-1.8-7-5-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </span>
+        <p>Φορτώνουμε τον χώρο σου...</p>
+    </div>
+
+    <section class="dashboard-error-screen" id="dashboard-error" role="alert" hidden>
+        <span class="error-mark" aria-hidden="true">!</span>
+        <p class="eyebrow">Η σύνδεση διακόπηκε</p>
+        <h1>Δεν ήταν δυνατή η φόρτωση</h1>
+        <p id="dashboard-error-copy">Έλεγξε τη σύνδεσή σου και δοκίμασε ξανά.</p>
+        <div class="error-actions">
+            <button class="button button-primary" id="retry-button" type="button">Δοκίμασε ξανά</button>
+            <a class="button button-secondary" href="./">Επιστροφή στη σύνδεση</a>
+        </div>
+    </section>
+
+    <div class="dashboard-app" id="dashboard-app" hidden>
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="./" aria-label="AuditLog, αρχική σελίδα">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3.5 19 6v5.3c0 4.2-2.8 7.4-7 9.2-4.2-1.8-7-5-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="brand-name">AUDITLOG<small>JUSTICE ROLEPLAY</small></span>
+            </a>
+
+            <p class="sidebar-label">ΧΩΡΟΣ ΕΡΓΑΣΙΑΣ</p>
+            <nav class="sidebar-nav" aria-label="Κύρια πλοήγηση">
+                <a class="nav-link is-active" href="#overview-section">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <span>Επισκόπηση</span>
+                </a>
+                <a class="nav-link" href="#tickets-section">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v3a3 3 0 0 0 0 6v3a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18v-3a3 3 0 0 0 0-6V6A1.5 1.5 0 0 1 5 4.5Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v1m0 3v1m0 3v.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                    <span>Τα αιτήματά μου</span>
+                </a>
+                <a class="nav-link" href="#new-ticket-section">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8m-4-4h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <span>Νέο αίτημα</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="account-card">
+                    <span class="avatar" id="sidebar-avatar" aria-hidden="true">U</span>
+                    <span class="account-copy">
+                        <strong id="sidebar-username">Χρήστης</strong>
+                        <small id="sidebar-role">Μέλος</small>
+                    </span>
+                </div>
+                <button class="sign-out-button" id="sign-out-button" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10m4-3 4-4-4-4m4 4H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Αποσύνδεση</span>
+                </button>
+            </div>
+        </aside>
+
+        <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="Κλείσιμο πλοήγησης" hidden></button>
+
+        <div class="dashboard-main">
+            <header class="topbar">
+                <div class="topbar-leading">
+                    <button class="icon-button mobile-menu-button" id="sidebar-toggle" type="button" aria-label="Άνοιγμα πλοήγησης" aria-expanded="false" aria-controls="sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>Justice Roleplay</span>
+                        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <strong>Dashboard</strong>
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <span class="workspace-status"><span aria-hidden="true"></span> Ο χώρος σου</span>
+                    <button class="icon-button" id="refresh-button" type="button" aria-label="Ανανέωση δεδομένων" title="Ανανέωση">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4m-4 5a8 8 0 0 0 14.9 3M20 20v-4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="content">
+                <div class="inline-alert" id="dashboard-alert" role="status" aria-live="polite" hidden></div>
+
+                <section class="welcome-card" id="overview-section" aria-labelledby="welcome-title">
+                    <div class="welcome-copy">
+                        <p class="eyebrow">Ο προσωπικός σου χώρος</p>
+                        <h1 id="welcome-title">Καλώς ήρθες, <span id="greeting-name">!</span></h1>
+                        <p id="dashboard-intro">Παρακολούθησε τα αιτήματά σου και μείνε ενημερωμένος για την εξέλιξή τους.</p>
+                    </div>
+                    <a class="button button-primary" href="#new-ticket-section">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                        <span>Νέο αίτημα</span>
+                    </a>
+                    <span class="welcome-decoration" aria-hidden="true"></span>
+                </section>
+
+                <section class="stats-grid" aria-label="Στατιστικά αιτημάτων">
+                    <article class="stat-card">
+                        <span class="stat-icon stat-icon-blue" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v3a3 3 0 0 0 0 6v3a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18v-3a3 3 0 0 0 0-6V6A1.5 1.5 0 0 1 5 4.5Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v1m0 3v1m0 3v.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                        </span>
+                        <span class="stat-copy"><span>Σύνολο αιτημάτων</span><strong id="stat-total">—</strong></span>
+                        <span class="stat-caption">Στον λογαριασμό σου</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon stat-icon-amber" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <span class="stat-copy"><span>Σε εξέλιξη</span><strong id="stat-open">—</strong></span>
+                        <span class="stat-caption">Ανοιχτά και υπό εξέταση</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-icon stat-icon-green" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4.5 4.5L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/></svg>
+                        </span>
+                        <span class="stat-copy"><span>Ολοκληρωμένα</span><strong id="stat-resolved">—</strong></span>
+                        <span class="stat-caption">Με κατάσταση επίλυσης</span>
+                    </article>
+                </section>
+
+                <div class="dashboard-grid">
+                    <section class="panel tickets-panel" id="tickets-section" aria-labelledby="tickets-title">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Υποστήριξη</p>
+                                <h2 id="tickets-title">Τα αιτήματά μου</h2>
+                            </div>
+                            <span class="ticket-count" id="ticket-count">0 αιτήματα</span>
+                        </div>
+                        <div class="ticket-toolbar">
+                            <div class="filter-tabs" role="group" aria-label="Φιλτράρισμα αιτημάτων">
+                                <button class="filter-tab is-active" type="button" data-ticket-filter="all">Όλα</button>
+                                <button class="filter-tab" type="button" data-ticket-filter="open">Ανοιχτά</button>
+                                <button class="filter-tab" type="button" data-ticket-filter="in_progress">Σε εξέλιξη</button>
+                                <button class="filter-tab" type="button" data-ticket-filter="resolved">Ολοκληρωμένα</button>
+                            </div>
+                            <label class="search-field">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                <span class="visually-hidden">Αναζήτηση αιτημάτων</span>
+                                <input id="ticket-search" type="search" placeholder="Αναζήτηση..." autocomplete="off">
+                            </label>
+                        </div>
+                        <div class="ticket-list" id="ticket-list" aria-live="polite">
+                            <div class="ticket-skeleton" aria-hidden="true"></div>
+                            <div class="ticket-skeleton" aria-hidden="true"></div>
+                        </div>
+                    </section>
+
+                    <aside class="dashboard-side">
+                        <section class="panel new-ticket-panel" id="new-ticket-section" aria-labelledby="new-ticket-title">
+                            <div class="panel-heading compact-heading">
+                                <div>
+                                    <p class="eyebrow">Είμαστε εδώ για σένα</p>
+                                    <h2 id="new-ticket-title">Νέο αίτημα</h2>
+                                </div>
+                                <span class="form-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                </span>
+                            </div>
+                            <p class="panel-description">Πες μας τι χρειάζεσαι και η ομάδα θα το εξετάσει.</p>
+                            <form id="ticket-form">
+                                <label class="form-field">
+                                    <span>Θέμα</span>
+                                    <input id="ticket-subject" name="subject" type="text" maxlength="120" placeholder="π.χ. Αίτημα υποστήριξης" autocomplete="off" required>
+                                </label>
+                                <label class="form-field">
+                                    <span>Περιγραφή</span>
+                                    <textarea id="ticket-description" name="description" rows="5" maxlength="5000" placeholder="Περιέγραψε το αίτημά σου με λεπτομέρειες..." autocomplete="off" required></textarea>
+                                </label>
+                                <div class="form-footer">
+                                    <span>Έως 5.000 χαρακτήρες</span>
+                                    <button class="button button-primary" id="ticket-submit" type="submit">
+                                        <span>Υποβολή</span>
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </button>
+                                </div>
+                                <p class="form-message" id="create-message" role="status" aria-live="polite"></p>
+                            </form>
+                        </section>
+
+                        <section class="panel notifications-panel" id="notification-section" aria-labelledby="notification-title" hidden>
+                            <div class="panel-heading compact-heading">
+                                <div>
+                                    <p class="eyebrow">Διαχείριση</p>
+                                    <h2 id="notification-title">Νέες εγγραφές</h2>
+                                </div>
+                                <span class="notification-count" id="notification-count">0</span>
+                            </div>
+                            <p class="panel-description">Εκκρεμείς εγγραφές προς κοινοποίηση.</p>
+                            <div class="notification-list" id="notification-list" aria-live="polite"></div>
+                            <p class="form-message" id="notification-message" role="status" aria-live="polite"></p>
+                        </section>
+                    </aside>
+                </div>
+                <footer class="content-footer">AuditLog · Justice Roleplay</footer>
+            </main>
+        </div>
+        <div class="toast" id="dashboard-toast" role="status" aria-live="polite" hidden></div>
+    </div>
+    <script type="module" src="./dashboard.js"></script>
+</body>
+</html>
